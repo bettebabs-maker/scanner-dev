@@ -1105,7 +1105,7 @@
       })
     }).catch(e => console.warn("Non-SLC log failed:", e));
 
-    // Also log to inventory as an adjustment so it shows in reports
+    // Log to adjustments sheet with retail price as quantity for reporting
     fetch("https://slc-proxy.bettebabs.workers.dev", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1115,10 +1115,8 @@
         center: currentCenter,
         itemId: "Non-SLC Item",
         description: name,
-        adjustment: -1,
+        adjustment: -retail,  // store retail $ as negative quantity
         reason: "Non-SLC Sale",
-        price: retail,
-        tokens: tokens
       })
     }).catch(e => console.warn("Non-SLC adjustment failed:", e));
 
@@ -1465,7 +1463,10 @@
     }
 
     try {
-      const historyPromises = inventory.map(item =>
+      // Add Non-SLC Item as a virtual inventory item so its history gets fetched
+      const allItems = [...inventory, { id: "Non-SLC Item", description: "Non-SLC Item", image_url: null }];
+
+      const historyPromises = allItems.map(item =>
         fetch("https://slc-proxy.bettebabs.workers.dev", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: "get_item_history", center: currentCenter, itemId: item.id })
@@ -1881,7 +1882,7 @@
       } else if (h.label === "Sold but not scanned" || h.label === "Raffled") {
         soldVal += qty * price;
       } else if (h.label === "Non-SLC Sale") {
-        soldVal += qty * (Number(h.price) || price);
+        soldVal += Math.abs(Number(h.qty)); // qty stored as retail $ amount
       } else if (h.label === "Lost" || h.label === "Damaged") {
         lostVal += qty * price;
       } else if (h.label === "Scan cancelled") {
