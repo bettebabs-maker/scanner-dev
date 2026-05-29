@@ -679,6 +679,29 @@
         <i class="ti ti-keyboard" style="font-size:22px;"></i> Type It In
       </button>
     </div>
+
+    <!-- NON-SLC ITEM SECTION -->
+    <div style="margin-top:1.5rem; border-radius:var(--radius-lg); overflow:hidden; box-shadow:0 2px 12px rgba(217,119,6,0.15);">
+      <div style="background:linear-gradient(135deg, #f59e0b, #d97706); padding:14px 16px;">
+        <div style="font-size:15px; font-weight:800; color:white;"><i class="ti ti-sparkles" style="margin-right:6px;"></i>Sold a Non-SLC Reward?</div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.85); margin-top:3px; line-height:1.5;">Log it here and we'll add it to your Sold report total!</div>
+      </div>
+      <div style="background:white; padding:14px 16px; display:flex; flex-direction:column; gap:10px;">
+        <div id="nonslc-success-flash" class="success-flash"><i class="ti ti-circle-check"></i> Non-SLC item logged!</div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Item Description</label>
+          <input type="text" id="nonslc-name" placeholder="e.g. Slime kit from Target" style="width:100%; height:42px; padding:0 12px; border:1px solid var(--border-med); border-radius:var(--radius-md); font-size:15px; outline:none; background:#fafafa; font-family:var(--font);">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Token Value <span style="font-size:11px; font-weight:400; color:var(--text-hint);">we'll calculate the dollar amount</span></label>
+          <input type="text" id="nonslc-retail" placeholder="e.g. 235" inputmode="numeric" oninput="calcNonSLCTokens()" style="width:100%; height:42px; padding:0 12px; border:1px solid var(--border-med); border-radius:var(--radius-md); font-size:15px; outline:none; background:#fafafa; font-family:var(--font);">
+        </div>
+        <div id="nonslc-token-preview" style="display:none; background:#fffbeb; border-radius:var(--radius-md); padding:8px 12px; font-size:13px; color:#92400e; font-weight:600;"></div>
+      </div>
+      <div style="background:#fffbeb; padding:10px 16px; border-top:1px solid #fde68a;">
+        <button onclick="submitNonSLC()" style="display:block; margin:0 auto; height:44px; padding:0 28px; background:#d97706; color:white; border:none; border-radius:var(--radius-md); font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font);"><i class="ti ti-send"></i> Log This Sale</button>
+      </div>
+    </div>
   </div>
 
   <!-- SCAN SCREEN -->
@@ -733,28 +756,6 @@
       <div id="log-list"><div class="log-empty">No tags logged yet</div></div>
     </div>
 
-    <!-- NON-SLC ITEM SECTION -->
-    <div style="margin-top:1.5rem; border-radius:var(--radius-lg); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem;">
-      <div style="background:#6b7280; padding:12px 16px;">
-        <div style="font-size:14px; font-weight:800; color:white;"><i class="ti ti-shopping-bag" style="margin-right:6px;"></i>Recording a Non-SLC Reward Sale?</div>
-        <div style="font-size:11px; color:rgba(255,255,255,0.8); margin-top:2px; line-height:1.5;">Enter a description and retail value and we'll add it to your Sold report total.</div>
-      </div>
-      <div style="background:white; padding:14px 16px; display:flex; flex-direction:column; gap:10px;">
-        <div id="nonslc-success-flash" class="success-flash"><i class="ti ti-circle-check"></i> Non-SLC item logged!</div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label>Item Description</label>
-          <input type="text" id="nonslc-name" placeholder="e.g. Slime kit from Target" style="width:100%; height:42px; padding:0 12px; border:1px solid var(--border-med); border-radius:var(--radius-md); font-size:15px; outline:none; background:#fafafa; font-family:var(--font);">
-        </div>
-        <div class="form-group" style="margin-bottom:0;">
-          <label>Token Value <span style="font-size:11px; font-weight:400; color:var(--text-hint);">we'll calculate the dollar amount</span></label>
-          <input type="text" id="nonslc-retail" placeholder="e.g. 235" inputmode="numeric" oninput="calcNonSLCTokens()" style="width:100%; height:42px; padding:0 12px; border:1px solid var(--border-med); border-radius:var(--radius-md); font-size:15px; outline:none; background:#fafafa; font-family:var(--font);">
-        </div>
-        <div id="nonslc-token-preview" style="display:none; background:#f0f4ff; border-radius:var(--radius-md); padding:8px 12px; font-size:13px; color:var(--navy); font-weight:600;"></div>
-      </div>
-      <div style="background:#f9fafb; padding:10px 16px; border-top:1px solid var(--border);">
-        <button onclick="submitNonSLC()" style="display:block; margin:0 auto; height:40px; padding:0 28px; background:#6b7280; color:white; border:none; border-radius:var(--radius-md); font-size:14px; font-weight:700; cursor:pointer; font-family:var(--font);"><i class="ti ti-send"></i> Log This Sale</button>
-      </div>
-    </div>
   </div>
 
   <!-- INVENTORY SCREEN -->
@@ -1089,21 +1090,6 @@
     const tokenRate = window.centerTokenRate || 40;
     const retail = parseFloat((tokens / tokenRate).toFixed(2));
     const date = new Date().toLocaleDateString("en-US");
-
-    // Log as a scan entry to the Tag Scanner sheet
-    fetch("https://slc-proxy.bettebabs.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "scan",
-        date: date,
-        center: currentCenter,
-        name: name,
-        id: "Non-SLC Item",
-        qty: 1,
-        centerTag: currentCenter
-      })
-    }).catch(e => console.warn("Non-SLC log failed:", e));
 
     // Log to adjustments sheet with retail price as quantity for reporting
     fetch("https://slc-proxy.bettebabs.workers.dev", {
@@ -1572,7 +1558,7 @@
         <div style="background:white; border-radius:8px; padding:10px 12px; margin-bottom:8px; display:flex; align-items:center; gap:10px; border:0.5px solid var(--border);">
           ${h.image_url ? `<img src="${h.image_url}" style="width:40px; height:40px; object-fit:contain; border-radius:6px; flex-shrink:0; background:#f9fafb; border:0.5px solid var(--border);">` : `<div style="width:40px; height:40px; border-radius:6px; background:var(--bg); flex-shrink:0;"></div>`}
           <div style="flex:1; min-width:0;">
-            <div style="font-size:14px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.itemName}</div>
+            <div style="font-size:14px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${h.label === "Non-SLC Sale" && h.description ? h.description : h.itemName}</div>
             <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">${h.date}</div>
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
