@@ -1047,6 +1047,13 @@
     const name = document.getElementById("field-name").value.trim();
     const prodId = document.getElementById("field-id").value.trim();
     if (!name && !prodId) { alert("Please scan or enter at least a product name or ID before logging."); return; }
+
+    // Look up token value and price from inventory if available
+    const inventory = window.currentInventory || [];
+    const inventoryItem = inventory.find(item => String(item.id).trim() === String(prodId).trim());
+    const tokenValue = inventoryItem ? Number(inventoryItem.tokens) || 0 : 0;
+    const dollarValue = inventoryItem ? Number(inventoryItem.price) || 0 : 0;
+
     const entry = {
       type: "scan",
       date: new Date().toLocaleDateString("en-US"),
@@ -1054,7 +1061,9 @@
       name: name,
       id: prodId,
       qty: 1,
-      centerTag: document.getElementById("field-center-tag").value.trim()
+      centerTag: document.getElementById("field-center-tag").value.trim(),
+      tokenValue: tokenValue,
+      dollarValue: dollarValue
     };
     fetch("https://slc-proxy.bettebabs.workers.dev", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) }).catch(e => console.warn("Sheet logging failed:", e));
     scanLog.unshift(entry);
