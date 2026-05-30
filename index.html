@@ -680,12 +680,12 @@
       </button>
     </div>
 
+      <button onclick="toggleNonSLC()" id="nonslc-toggle-btn" style="width:100%; height:64px; background:#d97706; color:white; border:none; border-radius:var(--radius-lg); font-size:17px; font-weight:700; cursor:pointer; font-family:var(--font); display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 12px rgba(217,119,6,0.25);">
+        <i class="ti ti-sparkles" style="font-size:22px;"></i> Sold a Non-SLC Reward?
+      </button>
+
     <!-- NON-SLC ITEM SECTION -->
-    <div style="margin-top:1.5rem; border-radius:var(--radius-lg); overflow:hidden; box-shadow:0 2px 12px rgba(217,119,6,0.15);">
-      <div style="background:linear-gradient(135deg, #f59e0b, #d97706); padding:14px 16px;">
-        <div style="font-size:15px; font-weight:800; color:white;"><i class="ti ti-sparkles" style="margin-right:6px;"></i>Sold a Non-SLC Reward?</div>
-        <div style="font-size:12px; color:rgba(255,255,255,0.85); margin-top:3px; line-height:1.5;">Log it here and we'll add it to your Sold report total!</div>
-      </div>
+    <div id="nonslc-panel" style="display:none; border-radius:var(--radius-lg); overflow:hidden; box-shadow:0 2px 12px rgba(217,119,6,0.15); margin-top:0;">
       <div style="background:white; padding:14px 16px; display:flex; flex-direction:column; gap:10px;">
         <div id="nonslc-success-flash" class="success-flash"><i class="ti ti-circle-check"></i> Non-SLC item logged!</div>
         <div class="form-group" style="margin-bottom:0;">
@@ -1078,6 +1078,12 @@
     monthlyData = null; window.currentInventory = null; window.allAdjEntries = null; window.allHistoryEntries = null;
   }
 
+  function toggleNonSLC() {
+    const panel = document.getElementById("nonslc-panel");
+    const isOpen = panel.style.display !== "none";
+    panel.style.display = isOpen ? "none" : "block";
+  }
+
   function calcNonSLCTokens() {
     const tokens = parseFloat(document.getElementById("nonslc-retail").value) || 0;
     const tokenRate = window.centerTokenRate || 40;
@@ -1116,10 +1122,11 @@
       })
     }).catch(e => console.warn("Non-SLC adjustment failed:", e));
 
-    // Reset fields
+    // Reset fields and close panel
     document.getElementById("nonslc-name").value = "";
     document.getElementById("nonslc-retail").value = "";
     document.getElementById("nonslc-token-preview").style.display = "none";
+    document.getElementById("nonslc-panel").style.display = "none";
 
     // Show success flash
     const flash = document.getElementById("nonslc-success-flash");
