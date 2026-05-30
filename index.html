@@ -738,7 +738,7 @@
         <div class="field-row">
           <div class="field-group">
             <label>Product ID</label>
-            <input type="text" id="field-id" placeholder="e.g. 103080">
+            <input type="text" id="field-id" placeholder="e.g. 103080" oninput="lookupProduct()">
           </div>
           <div class="field-group">
             <label>Center (Tag) <span style="font-size:11px; font-weight:400; color:var(--text-hint);">pre-filled · change if needed</span></label>
@@ -900,6 +900,7 @@
       document.querySelector("#screen-scan-landing .back-btn").style.display = "none";
     }
     checkForRating();
+    preloadInventory();
   }
 
   document.getElementById("passcode-input").addEventListener("keydown", e => {
@@ -1149,6 +1150,34 @@
     }).join("");
   }
 
+  async function preloadInventory() {
+    if (window.currentInventory && window.currentInventory.length > 0) return;
+    try {
+      const resp = await fetch("https://slc-proxy.bettebabs.workers.dev", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "get_inventory", center: currentCenter })
+      });
+      const data = await resp.json();
+      window.currentInventory = data.inventory || [];
+    } catch(e) { /* silent fail */ }
+  }
+
+  function lookupProduct() {
+    const prodId = document.getElementById("field-id").value.trim();
+    const nameField = document.getElementById("field-name");
+    if (!prodId) return;
+    // Look up in inventory cache first
+    const inventory = window.currentInventory || [];
+    const item = inventory.find(i => String(i.id).trim() === prodId);
+    if (item && nameField.value === "") {
+      nameField.value = item.description;
+    }
+    // Also check scanImageMap for product name
+    if (!item && window.scanProductNames && window.scanProductNames[prodId]) {
+      if (nameField.value === "") nameField.value = window.scanProductNames[prodId];
+    }
+  }
+
   async function deleteScanEntry(idx) {
     if (!confirm("Remove this scan?")) return;
     const entry = scanLog[idx];
@@ -1160,7 +1189,7 @@
     flash.style.background = "#fee2e2";
     flash.style.color = "#dc2626";
     flash.style.border = "0.5px solid #fecaca";
-    flash.innerHTML = "Scan cancelled";
+    flash.innerHTML = "Scan removed";
     flash.classList.add("show");
     setTimeout(() => {
       flash.classList.remove("show");
@@ -1170,21 +1199,22 @@
       flash.innerHTML = '<i class="ti ti-circle-check"></i> Tag logged successfully';
     }, 2000);
 
-    // Log correction to sheet
+    // Delete from sheet
     fetch("https://slc-proxy.bettebabs.workers.dev", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        type: "adjustment",
-        date: new Date().toLocaleDateString("en-US"),
+        type: "delete_scan",
         center: currentCenter,
         itemId: entry.id,
-        description: entry.name,
-        adjustment: -1,
-        reason: "Scan cancelled"
+        date: entry.date
       })
-    }).catch(e => console.warn("Correction log failed:", e));
+    }).catch(e => console.warn("Delete scan failed:", e));
+
+    // Reset caches
+    monthlyData = null; window.allAdjEntries = null; window.allHistoryEntries = null;
   }
+
 
   function clearWishForm() {
     document.getElementById("wish-student").value = "";
