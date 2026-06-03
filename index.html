@@ -1041,7 +1041,15 @@
           catch(pe) { document.getElementById("ocr-status").textContent = "Parse error: " + text.substring(0, 50); setTimeout(cancelScan, 3000); return; }
           document.getElementById("field-name").value = parsed.name || "";
           document.getElementById("field-id").value = parsed.id || "";
-          document.getElementById("field-center-tag").value = parsed.center || "";
+          document.getElementById("field-center-tag").value = parsed.center || currentCenter;
+          // Look up correct product name, token value and price from inventory
+          if (parsed.id) {
+            const inventory = window.currentInventory || [];
+            const item = inventory.find(i => String(i.id).trim() === String(parsed.id).trim());
+            if (item) {
+              document.getElementById("field-name").value = item.description;
+            }
+          }
           cancelScan();
         } catch(err) {
           document.getElementById("ocr-status").textContent = "Error: " + err.message.substring(0, 60);
